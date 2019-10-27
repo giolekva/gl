@@ -4,6 +4,13 @@
 
 #include "gl/lunit/lunit.h"
 
+TEST(Empty) {
+  List list;
+  ListInit(&list, /*elem_size=*/1, /*free_fn*/NULL);
+  ASSERT_INT_EQ(list.size, 0);
+  ListDispose(&list);
+}
+
 TEST(Integers) {
   List list;
   ListInit(&list, sizeof(int), /*free_fn=*/NULL);
@@ -63,6 +70,7 @@ TEST(Free) {
 int main(int argc, char* argv[]) {
   LUnitOpts opts;
   LUnitOptsInit(&opts, argc, argv);
+  RUN_TEST(Empty, &opts);
   RUN_TEST(Integers, &opts);
   RUN_TEST(Strings, &opts);
   RUN_TEST(Free, &opts);
