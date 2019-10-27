@@ -2,18 +2,25 @@
 
 #include <string.h>
 
-int IntCmp(int a, int b) {
-  return a - b;
+bool IntCmp(int a, int b) {
+  return a == b;
 }
 
-int CharCmp(char a, char b) {
-  return a - b;
+bool CharCmp(char a, char b) {
+  return a == b;
 }
 
-int StrCmp(char* a, char* b) {
-  return strcmp(a, b);
+bool StrCmp(char* a, char* b) {
+  return strcmp(a, b) == 0;
 }
 
-int StrCmpNot(char* a, char* b) {
-  return !strcmp(a, b);
+bool StrCmpNot(char* a, char* b) {
+  return strcmp(a, b) != 0;
+}
+
+bool StrStartsWith(char* str, char* sub_str) {
+  if (strlen(str) < strlen(sub_str)) {
+    return false;
+  }
+  return strncmp(str, sub_str, strlen(sub_str)) == 0;
 }

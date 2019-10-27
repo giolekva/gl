@@ -1,12 +1,16 @@
 #ifndef GL_LUNIT_CMP_H_
 #define GL_LUNIT_CMP_H_
 
-int IntCmp(int a, int b);
+#include <stdbool.h>
 
-int CharCmp(char a, char b);
+bool IntCmp(int a, int b);
 
-int StrCmp(char* a, char* b);
+bool CharCmp(char a, char b);
 
-int StrCmpNot(char* a, char* b);
+bool StrCmp(char* a, char* b);
+
+bool StrCmpNot(char* a, char* b);
+
+bool StrStartsWith(char* str, char* sub_str);
 
 #endif // GL_LUNIT_CMP_H_

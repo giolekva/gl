@@ -8,7 +8,7 @@
     type exp = (expected);						\
     type act = (actual);						\
     char* form = (format);						\
-    if ((cmp)(exp, act)) {						\
+    if (!(cmp)(exp, act)) {						\
       test->success = false;						\
       char fmt[100];							\
       sprintf(fmt, "Expected %s Got %s (%%s) instead.", form, form);	\
@@ -30,5 +30,8 @@
 
 #define ASSERT_STR_NEQ(actual, expected) \
   __ASSERT_EQ(actual, expected, StrCmpNot, char*, "\"%s\"")
+
+#define ASSERT_STR_STARTS_WITH(actual, expected) \
+  __ASSERT_EQ(actual, expected, StrStartsWith, char*, "\"%s\"")
 
 #endif // GL_LUNIT_ASSERTS_H_
