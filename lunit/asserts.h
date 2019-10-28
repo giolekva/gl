@@ -4,34 +4,32 @@
 #include <stdio.h>
 #include <string.h>
 
-#define __ASSERT_EQ(actual, expected, cmp, type, format) {		\
-    type exp = (expected);						\
-    type act = (actual);						\
-    char* form = (format);						\
-    if (!(cmp)(exp, act)) {						\
-      test->success = false;						\
-      char fmt[100];							\
-      sprintf(fmt, "Expected %s Got %s (%%s) instead.", form, form);	\
-      LOG_ERROR(fmt, exp, act, #actual);				\
-      sprintf(fmt, "%%s:%%d: Expected %s Got %s (%%s) instead.", form, form); \
-      sprintf(test->error, fmt,  __FILE__, __LINE__, exp, act, #actual); \
+// TODO(giolekva): line info
+#define __ASSERT_EQ(cmp, msg, ...) {					\
+    if (!(cmp)(__VA_ARGS__)) {						\
+      test->success = false;			\
+      (msg)(test->error, __VA_ARGS__);					\
+      LOG_INFO(test->error);						\
       return;								\
     }									\
   }
 
 #define ASSERT_INT_EQ(actual, expected) \
-  __ASSERT_EQ(actual, expected, IntCmp, int, "%d")
+  __ASSERT_EQ(IntCmp, IntEqMsg, actual, expected)
 
 #define ASSERT_CHAR_EQ(actual, expected) \
-  __ASSERT_EQ(actual, expected, CharCmp, char, "'%c'")
+  __ASSERT_EQ(CharCmp, CharEqMsg, actual, expected)
 
 #define ASSERT_STR_EQ(actual, expected) \
-  __ASSERT_EQ(actual, expected, StrCmp, char*, "\"%s\"")
+  __ASSERT_EQ(StrCmp, StrEqMsg, actual, expected)
 
 #define ASSERT_STR_NEQ(actual, expected) \
-  __ASSERT_EQ(actual, expected, StrCmpNot, char*, "\"%s\"")
+  __ASSERT_EQ(StrCmpNot, StrNEqMsg, actual, expected)
 
-#define ASSERT_STR_STARTS_WITH(actual, expected) \
-  __ASSERT_EQ(actual, expected, StrStartsWith, char*, "\"%s\"")
+#define ASSERT_STR_STARTS_WITH(str, sub_str) \
+  __ASSERT_EQ(StrStartsWith, StrStartsWithMsg, str, sub_str)
+
+#define ASSERT_MEM_EQ(actual, expected, size)	\
+  __ASSERT_EQ(MemCmp, MemEqMsg, actual, expected, size)
 
 #endif // GL_LUNIT_ASSERTS_H_

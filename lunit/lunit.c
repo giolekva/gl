@@ -58,7 +58,6 @@ void TestSuiteDispose(TestSuite* suite) {
 }
 
 void TestSuiteList(TestSuite* suite) {
-  // printf("%s %d %f\n", suite->name, suite->tests.size, suite->weight);
   for (int i = 0; i < suite->tests.size; ++i) {
     printf("%s\n", ((Test*)ListGet(&suite->tests, i))->name);
   }
@@ -142,6 +141,9 @@ double CalculateScore(int n, TestSuite* suites[]) {
   double score = 0;
   for (int i = 0; i < n; ++i) {
     TestSuite* suite = suites[i];
+    if (suite->tests.size == 0) {
+      continue;
+    }
     int num_succeeded = 0;
     for (int j = 0; j < suite->tests.size; ++j) {
       num_succeeded += ((Test*)ListGet(&suite->tests, j))->success;

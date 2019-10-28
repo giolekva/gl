@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #define LOG(severity, ...) \
-  printf("%c %s %s %s:%d: ", severity, __DATE__, __TIME__, __FILE__, __LINE__); \
+  printf("%c %s:%d: ", severity, __FILE__, __LINE__); \
   printf(__VA_ARGS__); \
   printf("\n"); fflush(stdout);
 

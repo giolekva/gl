@@ -269,9 +269,6 @@ int main(int argc, char* argv[]) {
   ListProblemSet(opts.problems_dir, &problems);
   for (int i = 0; i < students.size; ++i) {
     Student* student = StudentListGet(&students, i);
-    if (strcmp(student->id, "vgamez")) {
-      continue;
-    }
     LOG_INFO("*** Evaluating student: %s ***", student->id);
     char student_dir[MAX_PATH];
     sprintf(student_dir, "%s/%s", opts.students_dir, student->id);    
