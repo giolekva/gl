@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-bool IntCmp(int a, int b) {
+bool IntEq(int a, int b) {
   return a == b;
 }
 
@@ -11,7 +11,7 @@ void IntEqMsg(char* msg, int actual, int expected) {
   sprintf(msg, "Expected %d got %d instead.", expected, actual);
 }
 
-bool CharCmp(char a, char b) {
+bool CharEq(char a, char b) {
   return a == b;
 }
 
@@ -19,7 +19,7 @@ void CharEqMsg(char* msg, char actual, char expected) {
   sprintf(msg, "Expected %c got %c instead.", expected, actual);
 }
 
-bool StrCmp(char* a, char* b) {
+bool StrEq(char* a, char* b) {
   return strcmp(a, b) == 0;
 }
 
@@ -27,7 +27,7 @@ void StrEqMsg(char* msg, char* actual, char* expected) {
   sprintf(msg, "Expected %s got %s instead.", expected, actual);
 }
 
-bool StrCmpNot(char* a, char* b) {
+bool StrNEq(char* a, char* b) {
   return strcmp(a, b) != 0;
 }
 
@@ -46,7 +46,7 @@ void StrStartsWithMsg(char* msg, char* str, char* sub_str) {
   sprintf(msg, "%s does not start with %s.", str, sub_str);
 }
 
-bool MemCmp(void* a, void* b, size_t size) {
+bool MemEq(void* a, void* b, size_t size) {
   return memcmp(a, b, size) == 0;
 }
 

@@ -15,21 +15,21 @@
   }
 
 #define ASSERT_INT_EQ(actual, expected) \
-  __ASSERT_EQ(IntCmp, IntEqMsg, actual, expected)
+  __ASSERT_EQ(IntEq, IntEqMsg, actual, expected)
 
 #define ASSERT_CHAR_EQ(actual, expected) \
-  __ASSERT_EQ(CharCmp, CharEqMsg, actual, expected)
+  __ASSERT_EQ(CharEq, CharEqMsg, actual, expected)
 
 #define ASSERT_STR_EQ(actual, expected) \
-  __ASSERT_EQ(StrCmp, StrEqMsg, actual, expected)
+  __ASSERT_EQ(StrEq, StrEqMsg, actual, expected)
 
 #define ASSERT_STR_NEQ(actual, expected) \
-  __ASSERT_EQ(StrCmpNot, StrNEqMsg, actual, expected)
+  __ASSERT_EQ(StrNEq, StrNEqMsg, actual, expected)
 
 #define ASSERT_STR_STARTS_WITH(str, sub_str) \
   __ASSERT_EQ(StrStartsWith, StrStartsWithMsg, str, sub_str)
 
 #define ASSERT_MEM_EQ(actual, expected, size)	\
-  __ASSERT_EQ(MemCmp, MemEqMsg, actual, expected, size)
+  __ASSERT_EQ(MemEq, MemEqMsg, actual, expected, size)
 
 #endif // GL_LUNIT_ASSERTS_H_
