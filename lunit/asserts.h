@@ -9,7 +9,7 @@
     if (!(cmp)(__VA_ARGS__)) {						\
       test->success = false;			\
       (msg)(test->error, __VA_ARGS__);					\
-      LOG_INFO(test->error);						\
+      LOG_INFO("%s", test->error);					\
       return;								\
     }									\
   }
