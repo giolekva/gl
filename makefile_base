@@ -1,0 +1,6 @@
+ifndef CC
+CC=gcc
+endif
+ifndef CFLAGS
+CFLAGS=-Wall -Werror -std=c99
+endif

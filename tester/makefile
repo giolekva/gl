@@ -1,12 +1,10 @@
+include ../makefile_base
+
 # Usage:
 # make        # compile all binary
 # make clean  # remove ALL binaries and objects
 
 .PHONY = all clean
-
-# Compiler to usee
-CC=gcc
-CFLAGS=-Wall # -fsanitize=address -fno-omit-frame-pointer
 
 run_tests: run_tests.c student problem
 	make -C ../containers list

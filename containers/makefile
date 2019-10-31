@@ -1,5 +1,4 @@
-CC=gcc
-CFLAGS=-Wall -Werror -std=c99
+include ../makefile_base
 
 %_test: %_test.c
 	$(CC) $(CFLAGS) -c -o $@.o $<
