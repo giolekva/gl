@@ -4,3 +4,5 @@ endif
 ifndef CFLAGS
 CFLAGS=-Wall -Werror -std=c99
 endif
+GL_INCLUDE_PATH=-I$(GL_LIB_PATH)/../
+CFLAGS+= $(GL_INCLUDE_PATH)

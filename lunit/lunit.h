@@ -66,7 +66,7 @@ double CalculateScore(int n, TestSuite* suites[]);
   } else if ((opts)->crash_on_failure) {				\
     LOG_FATAL("TEST %s: FAILURE", (test)->name);			\
   } else {								\
-  LOG_ERROR("TEST %s: FAILURE", (test)->name);			\  
+    LOG_ERROR("TEST %s: FAILURE", (test)->name);			\
   }
 
 #define RUN_TEST(name, opts) {					\
