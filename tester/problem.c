@@ -95,7 +95,9 @@ void ListProblemSet(const char* problems_dir, ProblemSet* problems) {
     p.src_dir = strdup(path);
     sprintf(path, "%s/%s/problem_config", problems_dir, name);
     FILE* config = fopen(path, "r");
-    CHECK(config != NULL);
+    if (config == NULL) {
+      continue;
+    }
     char line[MAX_CMD];
     fgets(line, MAX_CMD, config);
     line[strlen(line) - 1] = '\0';

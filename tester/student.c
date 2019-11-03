@@ -48,7 +48,7 @@ void StudentListLogInfo(StudentList* list) {
   }
 }
 
-void StudentListLogResults(StudentList* list) {
+void StudentListLogResults(StudentList* list, bool log_individual_tests) {
   LOG_INFO("*** Evaluation results ***");
   for (int i = 0; i < list->size; ++i) {
     Student* s = StudentListGet(list, i);
@@ -64,6 +64,9 @@ void StudentListLogResults(StudentList* list) {
 	continue;
       }
       LOG_INFO("  * %s : %lf", result->id, result->score);
+      if (!log_individual_tests) {
+	continue;
+      }
       for (int k = 0; k < result->tests.size; ++k) {
 	const TestResult* test = ListGet(&result->tests, k);
 	LOG_INFO("    - %s : TEST %d MEMORY %d ", test->name, test->succeeded,

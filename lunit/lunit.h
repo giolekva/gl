@@ -30,6 +30,7 @@ void LUnitOptsInit(LUnitOpts* opts, int argc, char* argv[]);
 typedef struct {
   char* name;
   bool success;
+  bool memory;
   char error[ERROR_MAX_LEN];
   void* test_fn;
 } Test;

@@ -7,6 +7,8 @@
 #define FLAG_RUN_TEST "--run_test="
 #define FLAG_RESULTS_FILE "--results_file="
 
+#define PENALTY_ON_MEMORY_FAILURE 0.15
+
 const LUnitOpts* LUnitDefaults() {
   static LUnitOpts opts;
   opts.mode = RUN;
@@ -36,6 +38,7 @@ void LUnitOptsInit(LUnitOpts* opts, int argc, char* argv[]) {
 void TestInit(Test* test, char* name, TestFn test_fn) {
   test->name = name;
   test->success = false;
+  test->success = false;
   test->error[0] = '\0';
   test->test_fn = test_fn;
 }
@@ -43,6 +46,7 @@ void TestInit(Test* test, char* name, TestFn test_fn) {
 void RunTest(Test* test, const LUnitOpts* opts) {
   LOG_INFO("TESTING: %s", test->name);
   test->success = true;
+  test->memory = true;
   ((TestFn)test->test_fn)(test);
   LOG_RESULTS(test, opts);
 }
@@ -97,7 +101,8 @@ void ProcessTestSuiteWeights(int n, TestSuite* suites[]) {
 void TestSuitesReadResults(int n, TestSuite* suites[], FILE* inp) {
   char test_name[1000];
   int succeeded;
-  while (fscanf(inp, "%s %d", test_name, &succeeded) != EOF) {
+  int memory;
+  while (fscanf(inp, "%s %d %d", test_name, &succeeded, &memory) != EOF) {
     bool found = false;
     for (int i = 0; i < n && !found; ++i) {
       for (int j = 0; j < suites[i]->tests.size && !found; ++j) {
@@ -105,6 +110,7 @@ void TestSuitesReadResults(int n, TestSuite* suites[], FILE* inp) {
 	if (strcmp(test->name, test_name) == 0) {
 	  found = true;	  
 	  test->success = succeeded;
+	  test->memory = memory;
 	}
       }
     }
@@ -145,10 +151,17 @@ double CalculateScore(int n, TestSuite* suites[]) {
       continue;
     }
     int num_succeeded = 0;
+    int num_memory_failed = 0;
     for (int j = 0; j < suite->tests.size; ++j) {
-      num_succeeded += ((Test*)ListGet(&suite->tests, j))->success;
+      Test* test = ListGet(&suite->tests, j);
+      if (test->success) {
+	++num_succeeded;
+	num_memory_failed += !test->memory;
+      }
     }
-    score += suite->weight * num_succeeded / suite->tests.size;
+    double score_per_test = suite->weight / suite->tests.size;
+    score += score_per_test *
+      (num_succeeded - PENALTY_ON_MEMORY_FAILURE * num_memory_failed);
   }
   return score;
 }

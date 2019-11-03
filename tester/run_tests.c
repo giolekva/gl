@@ -111,7 +111,6 @@ void PrepareWorkingDir(Student* student, ProblemInfo* problem,
 		       const char* student_dir, const char* working_dir) {
   List logs;
   ListInit(&logs, sizeof(FILE**), /*free_fn=*/NULL);
-  // ListAdd(&logs, &stdout);
   char mkdir_cmd[MAX_CMD];
   sprintf(mkdir_cmd, "mkdir -p %s", working_dir);
   CHECK(!ExecCmd("Creating working directory", mkdir_cmd, &logs));
@@ -135,6 +134,8 @@ void PrepareWorkingDir(Student* student, ProblemInfo* problem,
     if (overwrite) {
       sprintf(cmd, "cp -f %s/%s %s/%s", problem->src_dir, f, working_dir, f);
     } else {
+      // Since student files are copied into working directory first they will
+      // have newer modification date then files in problems directory.
       sprintf(cmd, "cp -u %s/%s %s/%s", problem->src_dir, f, working_dir, f);
     }
     CHECK(!ExecCmd("Preserving original file", cmd, &logs));
@@ -147,7 +148,6 @@ bool DetermineListOfTestsToRun(ProblemInfo* problem, const char* working_dir, Li
   FILE* fd = fmemopen(buf, 10000, "w");
   List log_streams;
   ListInit(&log_streams, sizeof(FILE**), /*free_fn=*/NULL);
-  // ListAdd(&log_streams, &stdout);
   ListAdd(&log_streams, &fd);
   char cmd[MAX_CMD];
   sprintf(cmd, "%s --list_tests", problem->test_binary);
@@ -179,14 +179,14 @@ void CalculateScore(ProblemInfo* problem, ProblemResult* result,
   assert(results_fd != NULL);
   for (int i = 0; i < result->tests.size; ++i) {
     TestResult* test = ListGet(&result->tests, i);
-    fprintf(results_fd, "%s %d\n", test->name, test->succeeded);
+    fprintf(results_fd, "%s %d %d\n", test->name, test->succeeded,
+	    test->memory);
   }
   fclose(results_fd);
   char buf[10000];
   FILE* fd = fmemopen(buf, 10000, "w");
   List log_streams;
   ListInit(&log_streams, sizeof(FILE**), /*free_fn=*/NULL);
-  // ListAdd(&log_streams, &stdout);
   ListAdd(&log_streams, &fd);
   char cmd[MAX_CMD];
   sprintf(cmd, "%s --results_file=%s", problem->test_binary, RESULTS_FILE);
@@ -214,17 +214,13 @@ bool SolutionExists(Student* student, ProblemInfo* problem,
 
 void EvaluateStudentOnProblem(Student* student, ProblemInfo* problem,
 			      const char* working_dir, ProblemResult* result) {
-  // char cwd[MAX_PATH];
-  // getcwd(cwd, MAX_PATH);
   FILE* logs_fd = NULL;
   List log_streams;
   ListInit(&log_streams, sizeof(FILE**), /*free_fn=*/NULL);
-  // ListAdd(&log_streams, &stdout);
   char logs_file[MAX_PATH];
   sprintf(logs_file, "%s/logs/evaluation.logs", working_dir);
   logs_fd = fopen(logs_file, "w");
   ListAdd(&log_streams, &logs_fd);
-  // chdir(working_dir);
   if (ExecCmdInWorkingDir("Building student solution", problem->cmd_make_lib,
 			  &log_streams, working_dir)) {
     goto ret;
@@ -258,7 +254,6 @@ void EvaluateStudentOnProblem(Student* student, ProblemInfo* problem,
     fclose(logs_fd);
   }
   ListDispose(&log_streams); 
-  // chdir(cwd);
 }
 
 void OutputResultAsCsv(StudentList* students, TesterOpts* opts) {
@@ -314,9 +309,6 @@ int main(int argc, char* argv[]) {
   int cnt = 0;
   for (int i = 0; i < students.size; ++i) {
     Student* student = StudentListGet(&students, i);
-    /* if (strcmp(student->id, "vgamez") != 0) { */
-    /*   continue; */
-    /* } */
     for (int j = 0; j < problems.size; ++j) {
       ProblemInfo* problem = ProblemSetGet(&problems, j);      
       LOG_INFO("*** Scheduling for evaluation: %s %s ***", student->id,
@@ -337,7 +329,7 @@ int main(int argc, char* argv[]) {
     pthread_join(tids[i], NULL);
     LOG_INFO("### Done evaluating student: %s ###", args[i].student->id);    
   }
-  StudentListLogResults(&students);
+  StudentListLogResults(&students, /*log_individual_tests=*/false);
   OutputResultAsCsv(&students, &opts);
   StudentListDispose(&students);
   ProblemSetDispose(&problems);
