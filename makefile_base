@@ -2,7 +2,6 @@ ifndef CC
 CC=gcc
 endif
 ifndef CFLAGS
-CFLAGS=-Wall -Werror -std=c99
+CFLAGS=-Wall -std=gnu99
 endif
-GL_INCLUDE_PATH=-I$(GL_LIB_PATH)/../
-CFLAGS+= $(GL_INCLUDE_PATH)
+CFLAGS+= -I$(GL_LIB_PATH)/../
