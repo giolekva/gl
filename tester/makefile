@@ -8,8 +8,9 @@ include ../makefile_base
 
 run_tests: run_tests.c student problem
 	make -C ../containers list
+	make -C ../threads pool
 	${CC} ${CFLAGS} -o run_tests run_tests.c student.o problem.o \
-		../containers/list.o
+		../containers/list.o ../threads/pool.o
 
 student: student.c student.h
 	${CC} ${CFLAGS} -c student.c
