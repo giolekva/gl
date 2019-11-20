@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "gl/lunit/cmp.h"
+
 // TODO(giolekva): line info
 #define __ASSERT_EQ(cmp, msg, ...) {					\
     if (!(cmp)(__VA_ARGS__)) {						\
@@ -13,6 +15,12 @@
       return;								\
     }									\
   }
+
+#define ASSERT_TRUE(cond) \
+  __ASSERT_EQ(BoolEq, BoolEqMsg, cond, true)
+
+#define ASSERT_FALSE(cond) \
+  __ASSERT_EQ(BoolEq, BoolEqMsg, cond, false)
 
 #define ASSERT_INT_EQ(actual, expected) \
   __ASSERT_EQ(IntEq, IntEqMsg, actual, expected)

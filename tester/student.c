@@ -52,7 +52,11 @@ void StudentListLogResults(StudentList* list, bool log_individual_tests) {
   LOG_INFO("*** Evaluation results ***");
   for (int i = 0; i < list->size; ++i) {
     Student* s = StudentListGet(list, i);
-    LOG_INFO("%s", s->id);
+    double score = 0;
+    for (int j = 0; j < s->problems.size; ++j) {
+      score += ((ProblemResult*)ListGet(&s->problems, j))->score;
+    }
+    LOG_INFO("%s %lf", s->id, score);
     for (int j = 0; j < s->problems.size; ++j) {
       ProblemResult* result = ListGet(&s->problems, j);
       if (!result->solution_found) {
@@ -80,24 +84,20 @@ void StudentListToCsv(StudentList* list, FILE* out) {
   assert(out != NULL);
   for (int i = 0; i < list->size; ++i) {
     Student* s = StudentListGet(list, i);
+    fprintf(out, "%s", s->id);
     for (int j = 0; j < s->problems.size; ++j) {
       ProblemResult* result = ListGet(&s->problems, j);
-      fprintf(out, "%s,%s", s->id, result->id);
       if (!result->solution_found) {
-	fprintf(out, ",N/A\n");
+	fprintf(out, ",N/A");
 	continue;
       }
       if (!result->test_compiled) {
-	fprintf(out, ",NOT COMPILED\n");
+	fprintf(out, ",NOT COMPILED");
 	continue;
-      }      
-      fprintf(out ,",%lf", result->score);
-      for (int k = 0; k < result->tests.size; ++k) {
-	const TestResult* test = ListGet(&result->tests, k);
-	fprintf(out, ",%d %d", test->succeeded, test->memory);
       }
-      fprintf(out, "\n");      
+      fprintf(out ,",%lf", result->score);
     }
+    fprintf(out, "\n");          
   }  
 }
 

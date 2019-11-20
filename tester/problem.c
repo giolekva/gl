@@ -59,12 +59,16 @@ void TestResultDispose(TestResult* res) {
   free(res->name);
 }
 
+void GenericTestResultDispose(void* pt) {
+  TestResultDispose(pt);
+}
+
 void ProblemResultInit(ProblemResult* res, const char* id) {
   assert(res != NULL);
   res->id = id;
   res->solution_found = false;
   res->test_compiled = false;
-  ListInit(&res->tests, sizeof(TestResult), /*free_fn=*/NULL);
+  ListInit(&res->tests, sizeof(TestResult), GenericTestResultDispose);
   res->score = 0;
 }
 

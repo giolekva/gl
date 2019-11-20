@@ -3,6 +3,16 @@
 #include <stdio.h>
 #include <string.h>
 
+bool BoolEq(bool actual, bool expected) {
+  return actual == expected;
+}
+
+void BoolEqMsg(char* msg, bool actual, bool expected) {
+  sprintf(msg, "Expected %s got %s instead.",
+	  expected ? "true" : "false",
+	  actual ? "true" : "false");
+}
+
 bool IntEq(int a, int b) {
   return a == b;
 }

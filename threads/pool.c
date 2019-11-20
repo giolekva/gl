@@ -6,9 +6,8 @@
 
 #include "gl/logging/logging.h"
 
-#define TASK_AVAILABLE "/threads/pool/task_available"
-#define WORKER_DONE "/threads/pool/worker_done"
-
+#define TASK_AVAILABLE "/gl/threads/pool/task_available"
+#define WORKER_DONE "/gl/threads/pool/worker_done"
 
 void TaskInit(Task* task, TaskFn task_fn, void* args, FreeFn free_fn) {
   task->task_fn = task_fn;

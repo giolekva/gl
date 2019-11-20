@@ -17,6 +17,8 @@
 #define MAX_PATH 1000
 #define MAX_CMD 1000
 
+#define MEM_CHECK_FLAGS "CFLAGS='-fsanitize=address' LDFLAGS='-fsanitize=address'"
+
 #define STUDENTS_DIR "--students_dir="
 #define PROBLEMS_DIR "--problems_dir="
 #define MODE_CLASS "--class"
@@ -171,7 +173,7 @@ bool DetermineListOfTestsToRun(ProblemInfo* problem, const char* working_dir, Li
 
 void CalculateScore(ProblemInfo* problem, ProblemResult* result,
 		    const char* working_dir) {
-  #define RESULTS_FILE "logs/results"
+  #define RESULTS_FILE "../logs/results"
   char results_file[1000];
   sprintf(results_file, "%s/%s", working_dir, RESULTS_FILE);
   FILE* results_fd = fopen(results_file, "w");
@@ -217,21 +219,41 @@ void EvaluateStudentOnProblem(Student* student, ProblemInfo* problem,
   List log_streams;
   ListInit(&log_streams, sizeof(FILE**), /*free_fn=*/NULL);
   char logs_file[MAX_PATH];
-  sprintf(logs_file, "%s/logs/evaluation.logs", working_dir);
+  sprintf(logs_file, "%s/logs/test.logs", working_dir);
   logs_fd = fopen(logs_file, "w");
   ListAdd(&log_streams, &logs_fd);
-  if (ExecCmdInWorkingDir("Building student solution", problem->cmd_make_lib,
+  // ListAdd(&log_streams, &stdout);
+  char test_dir[1000];
+  sprintf(test_dir, "%s/test_out", working_dir);
+  char mem_dir[1000];
+  sprintf(mem_dir, "%s/mem_out", working_dir);
+  char make[1000];
+  sprintf(make, "OUT_DIR=%s %s", test_dir, problem->cmd_make_lib);  
+  if (ExecCmdInWorkingDir("Building student solution", make,
 			  &log_streams, working_dir)) {
     goto ret;
   }
-  if (ExecCmdInWorkingDir("Building test", problem->cmd_make_test, &log_streams,
+  sprintf(make, "OUT_DIR=%s %s", test_dir, problem->cmd_make_test);  
+  if (ExecCmdInWorkingDir("Building test", make, &log_streams,
+			  working_dir)) {
+    goto ret;
+  }
+  sprintf(make, "OUT_DIR=%s %s %s", mem_dir, MEM_CHECK_FLAGS,
+	  problem->cmd_make_lib);
+  if (ExecCmdInWorkingDir("Building student solution for memory check", make,
+			  &log_streams, working_dir)) {
+    goto ret;
+  }
+  sprintf(make, "OUT_DIR=%s %s %s", mem_dir, MEM_CHECK_FLAGS,
+	  problem->cmd_make_test);
+  if (ExecCmdInWorkingDir("Building test for memory check", make, &log_streams,
 			  working_dir)) {
     goto ret;      
   }
   result->test_compiled = true;
   List test_names;
   ListInit(&test_names, sizeof(char*), StrFree);
-  CHECK(DetermineListOfTestsToRun(problem, working_dir, &test_names));
+  CHECK(DetermineListOfTestsToRun(problem, test_dir, &test_names));
   for (int j = 0; j < test_names.size; ++j) {
     char* name = *(char**)ListGet(&test_names, j);
     TestResult res;
@@ -240,19 +262,16 @@ void EvaluateStudentOnProblem(Student* student, ProblemInfo* problem,
     sprintf(desc, "Running test %s", name);
     char cmd[MAX_CMD];
     sprintf(cmd, "timeout 5s %s --run_test=%s --crash_on_failure", problem->test_binary, name);
-    res.succeeded = !ExecCmdInWorkingDir(desc, cmd, &log_streams, working_dir);
+    res.succeeded = !ExecCmdInWorkingDir(desc, cmd, &log_streams, test_dir);
     if (res.succeeded) {
-      sprintf(desc, "Checking test %s on memory", name);
-      sprintf(cmd, "timeout 5s valgrind -s --leak-check=full --show-leak-kinds=all --error-exitcode=1 --log-file=logs/valgrind.logs %s --run_test=%s",
-	      problem->test_binary, name);
-      res.memory = !ExecCmdInWorkingDir(desc, cmd, &log_streams, working_dir);
-    } else {
-      res.memory = false;
+      sprintf(desc, "Checking test %s on memory", name);    
+      sprintf(cmd, "timeout 5s %s --run_test=%s --crash_on_failure", problem->test_binary, name);
+      res.memory = !ExecCmdInWorkingDir(desc, cmd, &log_streams, mem_dir);
     }
     ListAdd(&result->tests, &res);
   }
   ListDispose(&test_names);
-  CalculateScore(problem, result, working_dir);
+  CalculateScore(problem, result, test_dir);
  ret:
   if (logs_fd != NULL) {
     fclose(logs_fd);
@@ -283,7 +302,6 @@ void Eval(void* pt) {
   List log_streams;
   ListInit(&log_streams, sizeof(FILE**), /*free_fn=*/NULL);
   ListAdd(&log_streams, &stdout);
-  // ExecCmd("----- NUMBER PROCESSES", "ps aux | grep timeout | wc -l", &log_streams);
   Args* args = pt;
   char student_dir[MAX_PATH];
   sprintf(student_dir, "%s/%s", args->opts->students_dir, args->student->id);
@@ -303,7 +321,6 @@ void Eval(void* pt) {
     LOG_INFO("### Student %s did not provide solution on problem %s",
 	     args->student->id, args->problem->id);
   }
-  // ExecCmd("----- NUMBER PROCESSES", "ps aux | grep timeout | wc -l", &log_streams);
   ListDispose(&log_streams);
 }
 
@@ -316,11 +333,14 @@ int main(int argc, char* argv[]) {
   ProblemSet problems;
   ListProblemSet(opts.problems_dir, &problems);
   ThreadPool pool;
-  ThreadPoolInit(&pool, /*num_workers=*/200);
+  ThreadPoolInit(&pool, /*num_workers=*/300);
   for (int i = 0; i < students.size; ++i) {
     Student* student = StudentListGet(&students, i);
+    // if (strcmp(student->id, "alkhok18") != 0) continue;
+    // if (strcmp(student->id, "igirg18") != 0) continue;
     for (int j = 0; j < problems.size; ++j) {
-      ProblemInfo* problem = ProblemSetGet(&problems, j);      
+      ProblemInfo* problem = ProblemSetGet(&problems, j);
+      // if (strcmp(problem->id, "decompress") != 0) continue;
       ProblemResult result;
       ProblemResultInit(&result, problem->id);
       ListAdd(&student->problems, &result);
