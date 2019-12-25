@@ -22,7 +22,7 @@
 #define STUDENTS_DIR "--students_dir="
 #define PROBLEMS_DIR "--problems_dir="
 #define MODE_CLASS "--class"
-#define MODE_STUDENT "--student"
+#define MODE_STUDENT "--student="
 // TODO(giolekva): working
 #define WORKING_DIR "--results_dir="
 
@@ -33,6 +33,7 @@ typedef enum {
 
 typedef struct {
   TesterMode mode;
+  char* student_name;
   char* students_dir;
   char* problems_dir;
   char* working_dir;
@@ -64,8 +65,9 @@ void TesterOptsInit(TesterOpts* opts, int argc, char* argv[]) {
       CHECK(mkdir(opts->working_dir, 0777) == 0);
     } else if (STR_EQ(argv[i], MODE_CLASS)) {
       mode_class = true;
-    } else if (STR_EQ(argv[i], MODE_STUDENT)) {
+    } else if (STR_STARTS_WITH(argv[i], MODE_STUDENT)) {
       mode_student = true;
+      opts->student_name = argv[i] + strlen(MODE_STUDENT);
     }
   }
   CHECK(opts->students_dir);
@@ -116,6 +118,10 @@ void PrepareWorkingDir(Student* student, ProblemInfo* problem,
   sprintf(mkdir_cmd, "mkdir -p %s", working_dir);
   CHECK(!ExecCmd("Creating working directory", mkdir_cmd, &logs));
   sprintf(mkdir_cmd, "mkdir -p %s/logs", working_dir);
+  CHECK(!ExecCmd("Creating test_out directory", mkdir_cmd, &logs));
+  sprintf(mkdir_cmd, "mkdir -p %s/test_out", working_dir);
+  CHECK(!ExecCmd("Creating mem_out directory", mkdir_cmd, &logs));  
+  sprintf(mkdir_cmd, "mkdir -p %s/mem_out", working_dir);
   CHECK(!ExecCmd("Creating logs directory", mkdir_cmd, &logs));  
   char cmd[MAX_CMD];
   sprintf(cmd, "cp -R %s/%s/* %s", student_dir, problem->id,
@@ -222,7 +228,7 @@ void EvaluateStudentOnProblem(Student* student, ProblemInfo* problem,
   sprintf(logs_file, "%s/logs/test.logs", working_dir);
   logs_fd = fopen(logs_file, "w");
   ListAdd(&log_streams, &logs_fd);
-  // ListAdd(&log_streams, &stdout);
+  ListAdd(&log_streams, &stdout);
   char test_dir[1000];
   sprintf(test_dir, "%s/test_out", working_dir);
   char mem_dir[1000];
@@ -336,11 +342,11 @@ int main(int argc, char* argv[]) {
   ThreadPoolInit(&pool, /*num_workers=*/300);
   for (int i = 0; i < students.size; ++i) {
     Student* student = StudentListGet(&students, i);
-    // if (strcmp(student->id, "alkhok18") != 0) continue;
-    // if (strcmp(student->id, "igirg18") != 0) continue;
+    if (opts.mode == STUDENT && strcmp(student->id, opts.student_name) != 0) {
+      continue;
+    }
     for (int j = 0; j < problems.size; ++j) {
       ProblemInfo* problem = ProblemSetGet(&problems, j);
-      // if (strcmp(problem->id, "decompress") != 0) continue;
       ProblemResult result;
       ProblemResultInit(&result, problem->id);
       ListAdd(&student->problems, &result);
