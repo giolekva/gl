@@ -17,7 +17,7 @@
 #define MAX_PATH 1000
 #define MAX_CMD 1000
 
-#define MEM_CHECK_FLAGS "CFLAGS='-fsanitize=address' LDFLAGS='-fsanitize=address'"
+#define MEM_CHECK_FLAGS "CFLAGS='-fsanitize=address -g' LDFLAGS='-fsanitize=address -g'"
 
 #define STUDENTS_DIR "--students_dir="
 #define PROBLEMS_DIR "--problems_dir="
@@ -225,10 +225,10 @@ void EvaluateStudentOnProblem(Student* student, ProblemInfo* problem,
   List log_streams;
   ListInit(&log_streams, sizeof(FILE**), /*free_fn=*/NULL);
   char logs_file[MAX_PATH];
-  sprintf(logs_file, "%s/logs/test.logs", working_dir);
+  sprintf(logs_file, "%s/logs/tests", working_dir);
   logs_fd = fopen(logs_file, "w");
   ListAdd(&log_streams, &logs_fd);
-  ListAdd(&log_streams, &stdout);
+  // ListAdd(&log_streams, &stdout);
   char test_dir[1000];
   sprintf(test_dir, "%s/test_out", working_dir);
   char mem_dir[1000];
@@ -271,7 +271,8 @@ void EvaluateStudentOnProblem(Student* student, ProblemInfo* problem,
     res.succeeded = !ExecCmdInWorkingDir(desc, cmd, &log_streams, test_dir);
     if (res.succeeded) {
       sprintf(desc, "Checking test %s on memory", name);    
-      sprintf(cmd, "timeout 5s %s --run_test=%s --crash_on_failure", problem->test_binary, name);
+      sprintf(cmd, "ASAN_OPTIONS=log_path=%s/logs/mem_%s timeout 5s %s --run_test=%s --crash_on_failure",
+	      working_dir, name, problem->test_binary, name);
       res.memory = !ExecCmdInWorkingDir(desc, cmd, &log_streams, mem_dir);
     }
     ListAdd(&result->tests, &res);
