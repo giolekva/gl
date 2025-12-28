@@ -116,7 +116,7 @@ void ListStudents(const char* students_dir, StudentList* list) {
     if (d == NULL) {
       break;
     }
-    if (d->d_name[0] == '.') {
+    if (d->d_name[0] == '.' || d->d_name[0] == '_') {
       continue;
     }
     // TODO(giolekva): skip any non directory files.

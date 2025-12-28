@@ -28,6 +28,9 @@
 #define ASSERT_CHAR_EQ(actual, expected) \
   __ASSERT_EQ(CharEq, CharEqMsg, actual, expected)
 
+#define ASSERT_BYTE_EQ(actual, expected) \
+  __ASSERT_EQ(ByteEq, ByteEqMsg, actual, expected)
+
 #define ASSERT_STR_EQ(actual, expected) \
   __ASSERT_EQ(StrEq, StrEqMsg, actual, expected)
 

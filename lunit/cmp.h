@@ -4,6 +4,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+bool ByteEq(char a, char b);
+void ByteEqMsg(char* msg, char a, char b);
+
 bool BoolEq(bool a, bool b);
 void BoolEqMsg(char* msg, bool a, bool b);
 

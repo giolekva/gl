@@ -88,7 +88,7 @@ void ListProblemSet(const char* problems_dir, ProblemSet* problems) {
       break;
     }
     const char* name = d->d_name;
-    if (name[0] == '.') {
+    if (name[0] == '.' || name[0] == '_') {
       continue;
     }
     ProblemInfo p;

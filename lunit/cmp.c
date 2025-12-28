@@ -3,6 +3,27 @@
 #include <stdio.h>
 #include <string.h>
 
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  ((byte) & 0x80 ? '1' : '0'), \
+  ((byte) & 0x40 ? '1' : '0'), \
+  ((byte) & 0x20 ? '1' : '0'), \
+  ((byte) & 0x10 ? '1' : '0'), \
+  ((byte) & 0x08 ? '1' : '0'), \
+  ((byte) & 0x04 ? '1' : '0'), \
+  ((byte) & 0x02 ? '1' : '0'), \
+  ((byte) & 0x01 ? '1' : '0') 
+
+bool ByteEq(char actual, char expected) {
+  return actual == expected;
+}
+
+void ByteEqMsg(char* msg, char actual, char expected) {
+  sprintf(msg, "Expected %c%c%c%c%c%c%c%c got %c%c%c%c%c%c%c%c instead.",
+		  BYTE_TO_BINARY(expected),
+		  BYTE_TO_BINARY(actual));
+}
+
 bool BoolEq(bool actual, bool expected) {
   return actual == expected;
 }

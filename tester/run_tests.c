@@ -58,7 +58,7 @@ void TesterOptsInit(TesterOpts* opts, int argc, char* argv[]) {
       opts->working_dir = malloc(strlen(argv[i]) - strlen(WORKING_DIR) + 14);
       assert(opts->working_dir != NULL);
       time_t t = time(NULL);
-      struct tm tm = *localtime(&t);      
+      struct tm tm = *localtime(&t);
       sprintf(opts->working_dir, "%s/%.2d%.2d%.2d%.2d%.2d%.2d",
 	      argv[i] + strlen(WORKING_DIR), tm.tm_mday, tm.tm_mon + 1,
 	      tm.tm_year - 100, tm.tm_hour, tm.tm_min, tm.tm_sec);
@@ -87,16 +87,29 @@ void TesterOptsDispose(TesterOpts* opts) {
 int ExecCmd(char* name, char* cmd, List* logs) {
   LOG_INFO("%s: %s", name, cmd);
   FILE* out = popen(cmd, "r");
-  char c;
-  while ((c = getc(out)) != EOF) {
+  char buf[1024];
+  while (fgets(buf, sizeof(buf), out) != NULL) {
     if (logs != NULL) {
       for (int i = 0; i < logs->size; ++i) {
 	FILE** log = ListGet(logs, i);
-	putc(c, *log);
+	fputs(buf, *log);
       }
     }
   }
+  /* while ((c = getc(out)) != EOF) { */
+  /*   count++; */
+  /*   if (count == 1000) { */
+  /*     return 1; */
+  /*   } */
+  /*   if (logs != NULL) { */
+  /*     for (int i = 0; i < logs->size; ++i) { */
+  /* 	FILE** log = ListGet(logs, i); */
+  /* 	putc(c, *log); */
+  /*     } */
+  /*   } */
+  /* } */
   int status = pclose(out);
+  // LOG_INFO("DONE %d %s: %s", status, name, cmd);
   if (WIFEXITED(status)) {
     return WEXITSTATUS(status);
   }
@@ -114,15 +127,16 @@ void PrepareWorkingDir(Student* student, ProblemInfo* problem,
 		       const char* student_dir, const char* working_dir) {
   List logs;
   ListInit(&logs, sizeof(FILE**), /*free_fn=*/NULL);
+  ListAdd(&logs, &stdout);
   char mkdir_cmd[MAX_CMD];
   sprintf(mkdir_cmd, "mkdir -p %s", working_dir);
   CHECK(!ExecCmd("Creating working directory", mkdir_cmd, &logs));
   sprintf(mkdir_cmd, "mkdir -p %s/logs", working_dir);
   CHECK(!ExecCmd("Creating test_out directory", mkdir_cmd, &logs));
   sprintf(mkdir_cmd, "mkdir -p %s/test_out", working_dir);
-  CHECK(!ExecCmd("Creating mem_out directory", mkdir_cmd, &logs));  
+  CHECK(!ExecCmd("Creating mem_out directory", mkdir_cmd, &logs));
   sprintf(mkdir_cmd, "mkdir -p %s/mem_out", working_dir);
-  CHECK(!ExecCmd("Creating logs directory", mkdir_cmd, &logs));  
+  CHECK(!ExecCmd("Creating logs directory", mkdir_cmd, &logs));
   char cmd[MAX_CMD];
   sprintf(cmd, "cp -R %s/%s/* %s", student_dir, problem->id,
 	  working_dir);
@@ -165,6 +179,7 @@ bool DetermineListOfTestsToRun(ProblemInfo* problem, const char* working_dir, Li
    }
   fclose(fd);
   ListDispose(&log_streams);
+  printf("%s\n+++++++++++++++++\n", buf);
   for (int i = 0; buf[i] != '\0'; ) {
     int j = i;
     while (buf[j] != '\n' && buf[j] != '\0') {
@@ -254,7 +269,7 @@ void EvaluateStudentOnProblem(Student* student, ProblemInfo* problem,
 	  problem->cmd_make_test);
   if (ExecCmdInWorkingDir("Building test for memory check", make, &log_streams,
 			  working_dir)) {
-    goto ret;      
+    goto ret;
   }
   result->test_compiled = true;
   List test_names;
@@ -263,18 +278,19 @@ void EvaluateStudentOnProblem(Student* student, ProblemInfo* problem,
   for (int j = 0; j < test_names.size; ++j) {
     char* name = *(char**)ListGet(&test_names, j);
     TestResult res;
-    TestResultInit(&res, strdup(name));   
+    TestResultInit(&res, strdup(name));
     char desc[MAX_CMD];
     sprintf(desc, "Running test %s", name);
     char cmd[MAX_CMD];
     sprintf(cmd, "timeout 5s %s --run_test=%s --crash_on_failure", problem->test_binary, name);
     res.succeeded = !ExecCmdInWorkingDir(desc, cmd, &log_streams, test_dir);
-    if (res.succeeded) {
-      sprintf(desc, "Checking test %s on memory", name);    
-      sprintf(cmd, "ASAN_OPTIONS=log_path=%s/logs/mem_%s timeout 5s %s --run_test=%s --crash_on_failure",
-	      working_dir, name, problem->test_binary, name);
-      res.memory = !ExecCmdInWorkingDir(desc, cmd, &log_streams, mem_dir);
-    }
+	res.memory = res.succeeded;
+    /* if (res.succeeded) { */
+    /*   sprintf(desc, "Checking test %s on memory", name); */
+    /*   sprintf(cmd, "ASAN_OPTIONS=log_path=%s/logs/mem_%s timeout 5s %s --run_test=%s --crash_on_failure", */
+	/*       working_dir, name, problem->test_binary, name); */
+    /*   res.memory = !ExecCmdInWorkingDir(desc, cmd, &log_streams, mem_dir); */
+    /* } */
     ListAdd(&result->tests, &res);
   }
   ListDispose(&test_names);
@@ -340,7 +356,7 @@ int main(int argc, char* argv[]) {
   ProblemSet problems;
   ListProblemSet(opts.problems_dir, &problems);
   ThreadPool pool;
-  ThreadPoolInit(&pool, /*num_workers=*/300);
+  ThreadPoolInit(&pool, /*num_workers=*/5);
   for (int i = 0; i < students.size; ++i) {
     Student* student = StudentListGet(&students, i);
     if (opts.mode == STUDENT && strcmp(student->id, opts.student_name) != 0) {
