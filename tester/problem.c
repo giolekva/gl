@@ -17,6 +17,8 @@ static void StrFree(void* str) {
 void ProblemInfoInit(ProblemInfo* p) {
   assert(p != NULL);
   ListInit(&p->files_to_preserve, sizeof(char*), StrFree);
+  p->check_memory = true;
+  p->individual_tests = false;
 }
 
 void ProblemInfoDispose(ProblemInfo* p) {
@@ -114,8 +116,14 @@ void ListProblemSet(const char* problems_dir, ProblemSet* problems) {
     p.test_binary = strdup(line);
     while (fgets(path, MAX_PATH, config) != NULL) {
       path[strlen(path) - 1] = '\0';
-      char* ch = strdup(path);
-      ListAdd(&p.files_to_preserve, &ch);
+	  if (0 == strcmp(path, "! memory=0")) {
+		p.check_memory = false;
+	  } else if (0 == strcmp(path, "! individual_tests=1")) {
+		p.individual_tests = true;
+	  } else {
+		char* ch = strdup(path);
+		ListAdd(&p.files_to_preserve, &ch);
+	  }
     }
     fclose(config);
     ProblemSetAdd(problems, &p);

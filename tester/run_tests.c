@@ -215,7 +215,19 @@ void CalculateScore(ProblemInfo* problem, ProblemResult* result,
   CHECK(!ExecCmdInWorkingDir("Calculating score", cmd, &log_streams, working_dir));
   fclose(fd);
   ListDispose(&log_streams);
-  sscanf(buf, "%lf", &result->score);
+  if (!problem->individual_tests) {
+	sscanf(buf, "%lf", &result->score);
+  } else {
+	result->score = 0;
+	int n = 0;
+	for (int i = 0; i < result->tests.size; ++i) {
+	  TestResult* test = ListGet(&result->tests, i);
+	  int k;
+	  sscanf(buf + n, "%lf%n", &test->score, &k);
+	  n += k + 1;
+	  result->score += test->score;
+	}
+  }
 }
 
 void StrFree(void* pt) {
@@ -241,7 +253,7 @@ void EvaluateStudentOnProblem(Student* student, ProblemInfo* problem,
   ListInit(&log_streams, sizeof(FILE**), /*free_fn=*/NULL);
   char logs_file[MAX_PATH];
   sprintf(logs_file, "%s/logs/tests", working_dir);
-  logs_fd = fopen(logs_file, "w");
+  logs_fd = fopen(logs_file, "a");
   ListAdd(&log_streams, &logs_fd);
   // ListAdd(&log_streams, &stdout);
   char test_dir[1000];
@@ -282,15 +294,17 @@ void EvaluateStudentOnProblem(Student* student, ProblemInfo* problem,
     char desc[MAX_CMD];
     sprintf(desc, "Running test %s", name);
     char cmd[MAX_CMD];
-    sprintf(cmd, "timeout 5s %s --run_test=%s --crash_on_failure", problem->test_binary, name);
+    sprintf(cmd, "timeout 10s %s --run_test=%s --crash_on_failure 2>&1", problem->test_binary, name);
     res.succeeded = !ExecCmdInWorkingDir(desc, cmd, &log_streams, test_dir);
-	res.memory = res.succeeded;
-    /* if (res.succeeded) { */
-    /*   sprintf(desc, "Checking test %s on memory", name); */
-    /*   sprintf(cmd, "ASAN_OPTIONS=log_path=%s/logs/mem_%s timeout 5s %s --run_test=%s --crash_on_failure", */
-	/*       working_dir, name, problem->test_binary, name); */
-    /*   res.memory = !ExecCmdInWorkingDir(desc, cmd, &log_streams, mem_dir); */
-    /* } */
+	if (!problem->check_memory) {
+	  LOG_INFO("Skipping memory check");
+	  res.memory = res.succeeded;
+	} else if (res.succeeded) {
+      sprintf(desc, "Checking test %s on memory", name);
+      sprintf(cmd, "ASAN_OPTIONS=log_path=%s/logs/mem_%s timeout 10s %s --run_test=%s --crash_on_failure",
+	      working_dir, name, problem->test_binary, name);
+      res.memory = !ExecCmdInWorkingDir(desc, cmd, &log_streams, mem_dir);
+    }
     ListAdd(&result->tests, &res);
   }
   ListDispose(&test_names);
@@ -299,7 +313,7 @@ void EvaluateStudentOnProblem(Student* student, ProblemInfo* problem,
   if (logs_fd != NULL) {
     fclose(logs_fd);
   }
-  ListDispose(&log_streams); 
+  ListDispose(&log_streams);
 }
 
 void OutputResultAsCsv(StudentList* students, TesterOpts* opts) {
@@ -366,6 +380,7 @@ int main(int argc, char* argv[]) {
       ProblemInfo* problem = ProblemSetGet(&problems, j);
       ProblemResult result;
       ProblemResultInit(&result, problem->id);
+	  result.individual_tests = problem->individual_tests;
       ListAdd(&student->problems, &result);
       Args* args = malloc(sizeof(Args));
       args->opts = &opts;

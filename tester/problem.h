@@ -11,6 +11,8 @@ typedef struct {
   char* cmd_make_lib;
   char* cmd_make_test;
   char* test_binary;
+  bool check_memory;
+  bool individual_tests;
   List files_to_preserve;
 } ProblemInfo;
 
@@ -28,6 +30,7 @@ typedef struct {
   char* name;
   bool succeeded;
   bool memory;
+  double score;
 } TestResult;
 
 void TestResultInit(TestResult* res, char* name);
@@ -37,6 +40,7 @@ typedef struct {
   const char* id;
   bool solution_found;
   bool test_compiled;
+  bool individual_tests;
   List tests;
   double score;
 } ProblemResult;

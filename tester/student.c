@@ -95,7 +95,14 @@ void StudentListToCsv(StudentList* list, FILE* out) {
 	fprintf(out, ",NOT COMPILED");
 	continue;
       }
-      fprintf(out ,",%lf", result->score);
+	  if (!result->individual_tests) {
+		fprintf(out ,",%lf", result->score);
+	  } else {
+		for (int k = 0; k < result->tests.size; ++k) {
+		  TestResult* test = ListGet(&result->tests, k);
+		  fprintf(out ,",%lf", test->score);
+		}
+	  }
     }
     fprintf(out, "\n");          
   }  
