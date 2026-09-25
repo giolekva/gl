@@ -28,7 +28,7 @@ const LUnitOpts* LUnitDefaults();
 void LUnitOptsInit(LUnitOpts* opts, int argc, char* argv[]);
 
 typedef struct {
-  char* name;
+  const char* name;
   bool success;
   bool memory;
   char error[ERROR_MAX_LEN];
@@ -36,15 +36,15 @@ typedef struct {
 } Test;
 
 typedef void(*TestFn)(Test*);  
-void TestInit(Test* test, char* name, TestFn test_fn);
+void TestInit(Test* test, const char* name, TestFn test_fn);
 
 typedef struct {
-  char* name;
+  const char* name;
   double weight;
   List tests;
 } TestSuite;
 
-void TestSuiteInit(TestSuite* suite, char* name, double weight);
+void TestSuiteInit(TestSuite* suite, const char* name, double weight);
 void TestSuiteDispose(TestSuite* suite);
 void TestSuiteAddTest(TestSuite* suite, Test* test);
 

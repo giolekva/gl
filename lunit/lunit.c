@@ -35,7 +35,7 @@ void LUnitOptsInit(LUnitOpts* opts, int argc, char* argv[]) {
   }
 }
 
-void TestInit(Test* test, char* name, TestFn test_fn) {
+void TestInit(Test* test, const char* name, TestFn test_fn) {
   test->name = name;
   test->success = false;
   test->success = false;
@@ -51,7 +51,7 @@ void RunTest(Test* test, const LUnitOpts* opts) {
   LOG_RESULTS(test, opts);
 }
 
-void TestSuiteInit(TestSuite* suite, char* name, double weight) {
+void TestSuiteInit(TestSuite* suite, const char* name, double weight) {
   suite->name = name;
   suite->weight = weight;
   ListInit(&suite->tests, sizeof(Test), /*free_fn=*/NULL);
